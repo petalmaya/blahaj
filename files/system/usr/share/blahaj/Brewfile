@@ -1,0 +1,12 @@
+# Installed on first boot by blahaj-brew-bundle.service, once Homebrew
+# itself has been unpacked to /home/linuxbrew by the brew module's own
+# brew-setup.service.
+brew "eza"
+brew "bat"
+brew "fzf"
+brew "ripgrep"
+brew "fd"
+brew "zoxide"
+brew "fastfetch"
+brew "gh"
+brew "just"

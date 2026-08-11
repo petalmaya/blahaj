@@ -1,0 +1,24 @@
+[Unit]
+Description=Install blahaj's Brewfile packages via brew bundle
+# brew-setup.service (from the bluebuild brew module) is what actually
+# unpacks Homebrew to /home/linuxbrew/.linuxbrew on first boot - this
+# has to run after it, or `brew` won't exist yet.
+After=brew-setup.service
+Requires=brew-setup.service
+ConditionPathExists=/home/linuxbrew/.linuxbrew/bin/brew
+# Only needs to run once - remove this marker to force a rerun. Lives
+# under the brew user's own home since the service runs unprivileged
+# and can't write to /etc.
+ConditionPathExists=!/var/home/linuxbrew/.blahaj-brew-bundle-done
+
+[Service]
+Type=oneshot
+User=1000
+Group=1000
+Environment=HOME=/var/home/linuxbrew
+ExecStart=/home/linuxbrew/.linuxbrew/bin/brew bundle --file=/usr/share/blahaj/Brewfile
+ExecStartPost=/usr/bin/touch /var/home/linuxbrew/.blahaj-brew-bundle-done
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

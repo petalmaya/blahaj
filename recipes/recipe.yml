@@ -91,19 +91,20 @@ modules:
         - NetworkManager.service
         - seatd.service
         - power-profiles-daemon.service
+        # picked up from files/systemd/system/blahaj-brew-bundle.service
+        # and copied into /usr/lib/systemd/system automatically by this
+        # module - runs `brew bundle` against the Brewfile below, once,
+        # the first time the system boots after brew-setup.service has
+        # actually unpacked Homebrew
+        - blahaj-brew-bundle.service
 
   # --- brew, front and center for CLI tooling -----------------------------
+  # The brew module only installs Homebrew itself (tarball at build time,
+  # unpacked to /home/linuxbrew on first boot) - it has no `install:` list.
+  # Actual packages get pulled in by `brew bundle` against the Brewfile
+  # below, via the blahaj-brew-bundle.service unit (enabled below).
   - type: brew
-    install:
-      - eza
-      - bat
-      - fzf
-      - ripgrep
-      - fd
-      - zoxide
-      - fastfetch
-      - gh
-      - just
+    nofile-limits: true
 
   # --- flatpak, front and center for GUI apps -----------------------------
   - type: default-flatpaks

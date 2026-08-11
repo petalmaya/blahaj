@@ -77,10 +77,13 @@ modules:
       - source: system
         destination: / # copies files/system/* into your image's root folder /
 
-  # --- greeter user, needed since /etc/greetd/config.toml runs as one ----
+  # --- greeter user ---------------------------------------------------
+  # Fedora's greetd package already creates the `greeter` system user
+  # itself via its own sysusers.d scriptlet (same mechanism seatd uses
+  # for its `seat` group) - no useradd needed, and this base image has
+  # no `video` group for one to join anyway.
   - type: script
     snippets:
-      - useradd -M -G video greeter || true
       - chmod -R go+rX /usr/share/quickshell/kurukurubar
       - chown -R greeter:greeter /var/lib/greetd
 

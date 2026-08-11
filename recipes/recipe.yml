@@ -78,12 +78,13 @@ modules:
         destination: / # copies files/system/* into your image's root folder /
 
   # --- greeter user ---------------------------------------------------
-  # Fedora's greetd package already creates the `greeter` system user
-  # itself via its own sysusers.d scriptlet (same mechanism seatd uses
-  # for its `seat` group) - no useradd needed, and this base image has
-  # no `video` group for one to join anyway.
+  # Turns out greetd's sysusers.d scriptlet doesn't actually take effect
+  # in this container build (systemd-sysusers isn't meaningfully running
+  # mid-build the way it would on a real boot) - so create the user
+  # ourselves, defensively, rather than assume the package did it.
   - type: script
     snippets:
+      - getent passwd greeter >/dev/null || useradd --system --no-create-home --home-dir /var/lib/greetd --shell /sbin/nologin greeter
       - chmod -R go+rX /usr/share/quickshell/kurukurubar
       - chown -R greeter:greeter /var/lib/greetd
 

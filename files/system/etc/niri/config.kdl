@@ -1,0 +1,89 @@
+// Default niri config for blahaj. niri falls back to this when a user
+// has no ~/.config/niri/config.kdl of their own. Copy it to
+// ~/.config/niri/config.kdl to customize.
+//
+// The desktop shell here is quickshell running kurukurubar
+// (petalmaya/flutterquick, vendored at /usr/share/quickshell/kurukurubar) -
+// bar, notifications, launcher, lock screen and wallpaper all come from
+// it, so there's no separate swaybg/waybar/etc. spawned alongside it.
+
+spawn-at-startup "quickshell" "-p" "/usr/share/quickshell/kurukurubar/shell.qml"
+spawn-at-startup "xwayland-satellite"
+spawn-at-startup "/usr/libexec/mate-polkit/polkit-mate-authentication-agent-1"
+spawn-at-startup "xdg-user-dirs-update"
+
+input {
+    keyboard {
+        xkb {}
+    }
+    touchpad {
+        tap
+        natural-scroll
+    }
+}
+
+layout {
+    gaps 12
+    center-focused-column "never"
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+
+    default-column-width { proportion 0.5; }
+
+    focus-ring {
+        width 2
+    }
+
+    border {
+        off
+    }
+}
+
+prefer-no-csd
+
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+binds {
+    Mod+Return { spawn "kgx"; }
+    Mod+D { spawn "quickshell" "ipc" "call" "launcher" "toggle"; }
+    Mod+Q { close-window; }
+    Mod+Shift+E { quit; }
+    Mod+L { spawn "quickshell" "ipc" "call" "lockscreen" "lock"; }
+
+    Mod+Left  { focus-column-left; }
+    Mod+Right { focus-column-right; }
+    Mod+Down  { focus-window-down; }
+    Mod+Up    { focus-window-up; }
+
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+
+    Mod+Shift+1 { move-window-to-workspace 1; }
+    Mod+Shift+2 { move-window-to-workspace 2; }
+    Mod+Shift+3 { move-window-to-workspace 3; }
+    Mod+Shift+4 { move-window-to-workspace 4; }
+    Mod+Shift+5 { move-window-to-workspace 5; }
+
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+
+    Print { screenshot; }
+
+    XF86AudioRaiseVolume  { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+    XF86AudioLowerVolume  { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+    XF86AudioMute         { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    XF86MonBrightnessUp   { spawn "brightnessctl" "set" "5%+"; }
+    XF86MonBrightnessDown { spawn "brightnessctl" "set" "5%-"; }
+}
+
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}

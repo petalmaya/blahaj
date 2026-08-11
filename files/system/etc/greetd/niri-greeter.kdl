@@ -1,0 +1,11 @@
+// Minimal niri config used ONLY for the greetd/greeter session - this is
+// deliberately separate from /etc/niri/config.kdl (the real, per-user
+// default). It only exists to give greeter.qml a compositor to draw
+// itself in before login; the real autostart list never runs here.
+
+spawn-at-startup "quickshell" "-p" "/usr/share/quickshell/kurukurubar/greeter.qml"
+
+// niri needs at least an empty input block to start cleanly on some
+// versions - harmless if not required.
+input {
+}

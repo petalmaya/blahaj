@@ -1,0 +1,12 @@
+# /etc/greetd/config.toml
+# Boots straight into niri running kurukurubar's greeter.qml (from
+# petalmaya/flutterquick), vendored on-image at
+# /usr/share/quickshell/kurukurubar. See /etc/greetd/niri-greeter.kdl
+# for the (separate, minimal) niri config used only for this session.
+
+[terminal]
+vt = 1
+
+[default_session]
+command = "niri --config /etc/greetd/niri-greeter.kdl"
+user = "greeter"

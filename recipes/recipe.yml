@@ -3,43 +3,120 @@
 # image will be published to ghcr.io/<user>/<name>
 name: blahaj
 # description will be included in the image's metadata
-description: This is my personal OS image.
+description: My personal OS image - niri + quickshell (kurukurubar) instead of GNOME, brew + flatpak for apps.
 
-# the base image to build on top of (FROM) and the version tag to use
-base-image: ghcr.io/ublue-os/silverblue-main
+# base-main ships no desktop environment at all, which is what we want
+# here since niri/quickshell are standing in for GNOME entirely (unlike
+# bluefin, which builds on top of silverblue-main and keeps GNOME).
+base-image: ghcr.io/ublue-os/base-main
 image-version: latest # You can pin to a specific version of Fedora as well
 
 # module configuration, executed in order
 # you can include multiple instances of the same module
 modules:
-  - type: files
-    files:
-      - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
-
+  # --- compositor, shell, greeter, wallpaper, fonts -----------------------
   - type: dnf
     repos:
       copr:
+        - yalter/niri
+        - errornointernet/quickshell
         - atim/starship
     install:
       packages:
+        - niri
+        - quickshell
+        - greetd
+        - xwayland-satellite
+        # --- Qt/quickshell runtime - qt6-qtwayland is the one that's
+        # easy to forget and breaks quickshell outright without it ---
+        - qt6-qtdeclarative
+        - qt6-qtwayland
+        - qt6-qt5compat
+        - qt6-qtmultimedia
+        - qt6-qtimageformats
+        - qt6-qtsvg
+        - qt6-qtvirtualkeyboard
+        # --- portals, polkit, session plumbing a bare base-main lacks ---
+        - xdg-desktop-portal
+        - xdg-desktop-portal-gnome # niri's recommended portal backend (screenshot/screencast)
+        - xdg-desktop-portal-gtk # file chooser, etc.
+        - xdg-user-dirs
+        - polkit
+        - mate-polkit # polkit auth agent - niri doesn't ship one itself
+        - NetworkManager
+        - network-manager-applet
+        - pipewire
+        - pipewire-pulseaudio
+        - pipewire-alsa
+        - wireplumber
+        - seatd
+        - kgx # terminal emulator, bound to Mod+Return in the niri config below
+        - brightnessctl
+        - power-profiles-daemon
+        - google-noto-sans-fonts
+        - google-noto-emoji-fonts
+        - pipx
         - micro
         - starship
+        - unzip
     remove:
       packages:
-        # example: removing firefox (in favor of the flatpak)
-        # "firefox" is the main package, "firefox-langpacks" is a dependency
+        # base-main has no GNOME/firefox to begin with, but keep this
+        # around as an example of the remove key in case a future base
+        # image (or a swapped-in base) brings something you don't want.
         - firefox
-        - firefox-langpacks # also remove firefox dependency (not required for all packages, this is a special case)
+        - firefox-langpacks
 
+  - type: script
+    scripts:
+      - fonts.sh # Material Symbols / nerd Noto / librebarcode - not packaged in Fedora
+      - rembg.sh # pipx install rembg, for the lock screen's fg-isolation effect
+
+  - type: files
+    files:
+      - source: system
+        destination: / # copies files/system/* into your image's root folder /
+
+  # --- greeter user, needed since /etc/greetd/config.toml runs as one ----
+  - type: script
+    snippets:
+      - useradd -M -G video greeter || true
+      - chmod -R go+rX /usr/share/quickshell/kurukurubar
+      - chown -R greeter:greeter /var/lib/greetd
+
+  - type: systemd
+    system:
+      enabled:
+        - greetd.service
+        - NetworkManager.service
+        - seatd.service
+        - power-profiles-daemon.service
+
+  # --- brew, front and center for CLI tooling -----------------------------
+  - type: brew
+    install:
+      - eza
+      - bat
+      - fzf
+      - ripgrep
+      - fd
+      - zoxide
+      - fastfetch
+      - gh
+      - just
+
+  # --- flatpak, front and center for GUI apps -----------------------------
   - type: default-flatpaks
     configurations:
       - notify: true # Send notification after install/uninstall is finished (true/false)
         scope: system
         # If no repo information is specified, Flathub will be used by default
-        install: # system flatpaks we want all users to have and not remove
+        install:
           - org.mozilla.firefox
           - org.gnome.Loupe
+          - org.gnome.TextEditor
+          - org.gnome.Papers
+          - io.github.flattool.Warehouse
       - scope: user # Also add Flathub user repo, but no user packages
 
   - type: signing # this sets up the proper policy & signing files for signed images to work fully

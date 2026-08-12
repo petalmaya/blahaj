@@ -27,6 +27,8 @@ modules:
         - quickshell
         - greetd
         - xwayland-satellite
+        - swayidle # idle daemon - lock/suspend on timeout, see blahaj-swayidle.service
+        - firewalld
         # --- Qt/quickshell runtime - qt6-qtwayland is the one that's
         # easy to forget and breaks quickshell outright without it ---
         - qt6-qtdeclarative
@@ -95,12 +97,18 @@ modules:
         - NetworkManager.service
         - seatd.service
         - power-profiles-daemon.service
+        - firewalld.service
         # picked up from files/systemd/system/blahaj-brew-bundle.service
         # and copied into /usr/lib/systemd/system automatically by this
         # module - runs `brew bundle` against the Brewfile below, once,
         # the first time the system boots after brew-setup.service has
         # actually unpacked Homebrew
         - blahaj-brew-bundle.service
+        - blahaj-update-check.timer
+    # blahaj-swayidle.service (user unit) is deliberately not enabled
+    # here - it's started explicitly from /etc/niri/config.kdl's
+    # spawn-at-startup instead, since niri doesn't reliably fire
+    # graphical-session.target for `WantedBy=` enablement to work.
 
   # --- brew, front and center for CLI tooling -----------------------------
   # The brew module only installs Homebrew itself (tarball at build time,

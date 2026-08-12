@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly check for a new blahaj image
+
+[Timer]
+OnCalendar=Sun 10:00
+Persistent=true
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target

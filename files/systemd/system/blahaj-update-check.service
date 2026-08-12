@@ -1,0 +1,18 @@
+[Unit]
+Description=Check for and stage a new blahaj image
+ConditionACPower=true
+
+[Service]
+Type=oneshot
+# --check stages the update (downloads it, ready for a reboot to apply)
+# without switching the booted deployment out from under a running
+# session, same as `rpm-ostree upgrade` normally being manual on this
+# image. It exits 0 whether or not an update was found.
+ExecStart=/usr/bin/rpm-ostree upgrade --check
+# Marker file for `ujust check-updates` (see the just recipes) to read
+# back, rather than every caller re-running rpm-ostree status parsing.
+# NOTE: this intentionally stops short of a desktop notification -
+# piping this into kurukurubar's NotifDots would need a proper IPC
+# hook there, left as a follow-up rather than shelling notify-send at
+# whatever session happens to be logged in.
+ExecStartPost=/usr/bin/sh -c 'mkdir -p /var/lib/blahaj && rpm-ostree status --json > /var/lib/blahaj/last-update-check.json'

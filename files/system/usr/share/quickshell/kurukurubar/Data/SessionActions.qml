@@ -56,8 +56,21 @@ Singleton {
     reloadableId: "idleInhibitor"
   }
 
+  // blahaj-swayidle.service (user unit, started at startup in
+  // /etc/niri/config.kdl) is what actually locks/suspends on a timeout
+  // now - systemd-inhibit --what=idle only blocks logind's own idle
+  // action, which swayidle doesn't consult, so it never actually
+  // stopped anything real. Stop/starting the unit itself does.
   Process {
-    command: ["systemd-inhibit", "--what=idle", "--who=kurukurubar", "--why=Manually Blocked Idle", "--mode=block", "sleep", "inf"]
-    running: root.idleInhibited
+    id: idleStopProc
+    command: ["systemctl", "--user", "stop", "blahaj-swayidle.service"]
+  }
+  Process {
+    id: idleStartProc
+    command: ["systemctl", "--user", "start", "blahaj-swayidle.service"]
+  }
+  onIdleInhibitedChanged: {
+    if (root.idleInhibited) idleStopProc.running = true;
+    else idleStartProc.running = true;
   }
 }

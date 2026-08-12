@@ -1,0 +1,27 @@
+[Unit]
+Description=Idle timeout daemon - dim/lock/suspend for blahaj
+# Wants the shell up first so `qs ipc call lockscreen lock` has
+# something to talk to; started explicitly from /etc/niri/config.kdl's
+# spawn-at-startup rather than a graphical-session.target dependency,
+# since niri doesn't reliably fire that target.
+After=graphical-session.target
+
+[Service]
+Type=simple
+# Timeouts:
+#  5 min  -> dim via brightnessctl (best-effort, ignores failure on
+#            desktops with no backlight)
+#  10 min -> lock via the shell's own IPC target (see comment in
+#            SessionActions.qml's suspend() for why not loginctl)
+#  15 min -> suspend
+# before-sleep always locks first regardless of the above, so a manual
+# `systemctl suspend` or lid-close still shows the lock screen on wake.
+ExecStart=/usr/bin/swayidle -w \
+  timeout 300 'brightnessctl -s set 10%' resume 'brightnessctl -r' \
+  timeout 600 'qs ipc call lockscreen lock' \
+  timeout 900 'systemctl suspend' \
+  before-sleep 'qs ipc call lockscreen lock'
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

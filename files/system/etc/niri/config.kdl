@@ -11,6 +11,13 @@ spawn-at-startup "quickshell" "-p" "/usr/share/quickshell/kurukurubar/shell.qml"
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "/usr/libexec/mate-polkit/polkit-mate-authentication-agent-1"
 spawn-at-startup "xdg-user-dirs-update"
+// Idle daemon - dims/locks/suspends on a timeout. It shells out to the
+// same "quickshell ipc call lockscreen lock" that Mod+L uses below, so
+// the actual lock UI is still kurukurubar's - swayidle just decides
+// when to trigger it. See /usr/bin/blahaj-swayidle-toggle for the
+// idleButton hookup in NotifDots.qml, which starts/stops this unit
+// instead of the old systemd-inhibit approach.
+spawn-at-startup "systemctl" "--user" "start" "blahaj-swayidle.service"
 
 input {
     keyboard {

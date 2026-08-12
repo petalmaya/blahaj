@@ -29,6 +29,15 @@ modules:
         - xwayland-satellite
         - swayidle # idle daemon - lock/suspend on timeout, see blahaj-swayidle.service
         - firewalld
+        # base-main ships no first-boot user creation at all (unlike
+        # silverblue-main/kinoite-main). Without this, ISO installs
+        # boot straight to greetd with zero accounts and a locked
+        # root - initial-setup is upstream Fedora's standard first-boot
+        # prompt (same one Silverblue/Kinoite/Bluefin use), and it's
+        # self-gating (runs once, only when no user exists yet), so it
+        # doesn't get in the way of rebasing onto some other premade
+        # image later.
+        - initial-setup
         # --- Qt/quickshell runtime - qt6-qtwayland is the one that's
         # easy to forget and breaks quickshell outright without it ---
         - qt6-qtdeclarative
@@ -87,6 +96,14 @@ modules:
   - type: script
     snippets:
       - getent passwd greeter >/dev/null || useradd --system --no-create-home --home-dir /var/lib/greetd --shell /sbin/nologin greeter
+      # --no-create-home means useradd never actually makes the
+      # directory - it only sets the passwd field. This was silently
+      # relying on the `files` module below to create /var/lib/greetd
+      # as a side effect of copying the background symlink into it,
+      # which is ordering-fragile and failed outright on ISO installs
+      # ("unable to set working directory: No such file or directory"
+      # from niri when greetd tries to chdir there for the session).
+      - mkdir -p /var/lib/greetd
       - chmod -R go+rX /usr/share/quickshell/kurukurubar
       - chown -R greeter:greeter /var/lib/greetd
 
@@ -98,6 +115,10 @@ modules:
         - seatd.service
         - power-profiles-daemon.service
         - firewalld.service
+        # initial-setup's own generator inserts it before
+        # graphical.target/greetd on first boot when no user exists
+        # yet - no explicit Before= needed here, just enabling it.
+        - initial-setup.service
         # picked up from files/systemd/system/blahaj-brew-bundle.service
         # and copied into /usr/lib/systemd/system automatically by this
         # module - runs `brew bundle` against the Brewfile below, once,

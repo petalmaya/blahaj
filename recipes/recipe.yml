@@ -89,23 +89,16 @@ modules:
         destination: / # copies files/system/* into your image's root folder /
 
   # --- greeter user ---------------------------------------------------
-  # Turns out greetd's sysusers.d scriptlet doesn't actually take effect
-  # in this container build (systemd-sysusers isn't meaningfully running
-  # mid-build the way it would on a real boot) - so create the user
-  # ourselves, defensively, rather than assume the package did it.
+  # greeter's actual home dir (/var/lib/greetd) and its wallpaper
+  # symlink are declared in
+  # files/system/usr/lib/tmpfiles.d/blahaj-greetd.conf instead of being
+  # created here or shipped under files/system/var/... - anything
+  # written to /var during the build (script or files module alike)
+  # doesn't survive into an actual ostree deployment, only /usr does.
   - type: script
     snippets:
       - getent passwd greeter >/dev/null || useradd --system --no-create-home --home-dir /var/lib/greetd --shell /sbin/nologin greeter
-      # --no-create-home means useradd never actually makes the
-      # directory - it only sets the passwd field. This was silently
-      # relying on the `files` module below to create /var/lib/greetd
-      # as a side effect of copying the background symlink into it,
-      # which is ordering-fragile and failed outright on ISO installs
-      # ("unable to set working directory: No such file or directory"
-      # from niri when greetd tries to chdir there for the session).
-      - mkdir -p /var/lib/greetd
       - chmod -R go+rX /usr/share/quickshell/kurukurubar
-      - chown -R greeter:greeter /var/lib/greetd
 
   - type: systemd
     system:
